@@ -4,7 +4,8 @@
 #include <array>
 #include <algorithm>
 #include <stdexcept>
-#include <iostream>
+#include <vector>
+#include <stdio.h>
 
 struct TwoSumRes {
   int first = 0;
@@ -12,7 +13,7 @@ struct TwoSumRes {
 };
 
 template <size_t sz>
-TwoSumRes TwoSum(const std::array<int, sz>& numbers, int target) {
+TwoSumRes TwoSum(const std::array<int, sz>& nums, int target) {
   if (sz == 0) {
     return {};
   }
@@ -24,14 +25,14 @@ TwoSumRes TwoSum(const std::array<int, sz>& numbers, int target) {
   bool is_find = false;
 
   while (!is_find && left < right) {
-    current_sum = numbers[left] + numbers[right];
+    current_sum = nums[left] + nums[right];
 
     if (current_sum > target) {
       --right;
     } else if (current_sum < target) {
       ++left;
     } else {
-      res = {numbers[left], numbers[right]};
+      res = {nums[left], nums[right]};
       is_find = true;
     }
   }
@@ -40,7 +41,7 @@ TwoSumRes TwoSum(const std::array<int, sz>& numbers, int target) {
 }
 
 template <size_t sz>
-void Reverse(std::array<int, sz>& numbers) {
+void Reverse(std::array<int, sz>& nums) {
 
   if (sz <= 1) {
     return ;
@@ -49,7 +50,7 @@ void Reverse(std::array<int, sz>& numbers) {
   size_t middle = sz / 2;
 
   for (size_t ind = 0; ind < middle; ++ind) {
-    std::swap(numbers[ind], numbers[sz - 1 - ind]);
+    std::swap(nums[ind], nums[sz - 1 - ind]);
   }
 }
 
@@ -58,19 +59,19 @@ void Reverse(std::array<int, sz>& numbers) {
 * counter - how many elements i processed
 */
 template <size_t sz>
-void RingShift(std::array<int, sz>& numbers, size_t shift) {
+void RingShift(std::array<int, sz>& nums, size_t shift) {
 
   if (sz == 0) {
     return ;
   }
 
   size_t counter = 0, ind = 0;
-  int saved_elem = numbers[ind];
+  int saved_elem = nums[ind];
   int current_elem = saved_elem;
   while (counter < sz) {
     ind = (ind + shift) % sz;
-    saved_elem = numbers[ind];
-    numbers[ind] = current_elem;
+    saved_elem = nums[ind];
+    nums[ind] = current_elem;
     current_elem = saved_elem;
     ++counter;
   }
@@ -120,9 +121,8 @@ int FindZero(const std::array<int, sz>& arr) {
   return return_val;
 }
 
-template <size_t sz_1, size_t sz_2>
-void CheapMergeArrays(std::array<int, sz_1>& arr_1,
-                      const std::array<int, sz_2>& arr_2) {
+template <size_t sz_1>
+int IsValid(const std::array<int, sz_1>& arr_1, size_t sz_2) {
 
   if (sz_1 < sz_2 || (sz_1 == sz_2 && sz_1 == 0)) {
     throw std::runtime_error("CheapMergeArrays:"
@@ -135,12 +135,18 @@ void CheapMergeArrays(std::array<int, sz_1>& arr_1,
     throw std::runtime_error("CheapMergeArrays: Zero element wasn't found!");
   }
 
-  size_t ptr_1 = static_cast<size_t>(zero_ind);
-  std::cout << "ptr_1 = " << ptr_1 << '\n';
-  size_t ptr_2 = sz_2 - 1;
-  size_t ptr = sz_1 - 1;
+  return zero_ind;
+}
 
-  while (ptr_1 > 0 && ptr_2 > 0) {
+template <size_t sz_1, size_t sz_2>
+void CheapMergeArrays(std::array<int, sz_1>& arr_1,
+                      const std::array<int, sz_2>& arr_2) {
+
+  int ptr_1 = IsValid(arr_1, sz_2);
+  int ptr_2 = static_cast<int>(sz_2) - 1;
+  int ptr = static_cast<int>(sz_1) - 1;
+
+  while (ptr_1 > -1 && ptr_2 > -1) {
     if (arr_1[ptr_1] > arr_2[ptr_2]) {
       arr_1[ptr] = arr_1[ptr_1];
       --ptr_1;
@@ -151,23 +157,141 @@ void CheapMergeArrays(std::array<int, sz_1>& arr_1,
     --ptr;
   }
 
-  while (ptr_1 >= 0) {
-    arr_1[ptr] = arr_1[ptr_1];
-    if (ptr_1 == 0) {
-      break;
-    }
-    --ptr;
-    --ptr_1;
+  while (ptr_1 > -1) {
+    arr_1[ptr--] = arr_1[ptr_1--];
   }
-  while (ptr_2 >= 0) {
-    arr_1[ptr] = arr_2[ptr_2];
-    if (ptr_2 == 0) {
-      break;
-    }
-    --ptr;
-    --ptr_2;
+  while (ptr_2 > -1) {
+    arr_1[ptr--] = arr_2[ptr_2--];
   }
 }
 
+template <size_t sz>
+std::vector<int> MinSubarray(const std::array<int, sz>& nums, int target) {
+
+  size_t left_ptr = 0;
+  size_t prev_left = 0, prev_right = sz;
+  int current_sum = 0;
+  bool is_find = false;
+
+  for (size_t right_ptr = 0; right_ptr < sz; ++right_ptr){
+    current_sum += nums[right_ptr];
+
+    while (current_sum >= target) {
+      if (right_ptr - left_ptr < prev_right - prev_left) {
+        prev_right = right_ptr;
+        prev_left = left_ptr;
+      }
+      current_sum -= nums[left_ptr];
+      ++left_ptr;
+      is_find = true;
+    }
+  }
+
+  std::vector<int> subarray;
+  for (size_t ind = prev_left; is_find && ind <= prev_right; ++ind) {
+    subarray.push_back(nums[ind]);
+  }
+
+  return subarray;
+}
+
+template<size_t sz>
+void Sort(std::array<int, sz>& nums) {
+
+  int zeros_counter = 0;
+  for (int el: nums) {
+    if (el == 0) ++zeros_counter;
+  }
+
+  for (int counter = 0; counter < zeros_counter; ++counter) {
+    nums[counter] = 0;
+  }
+  for (int counter = zeros_counter; counter < sz; ++counter) {
+    nums[counter] = 1;
+  }
+}
+
+template <size_t sz>
+void NetherlandsFlag(std::array<int ,sz>& nums) {
+
+  int unit_counter = 0;
+  int zeros_counter = 0;
+
+  for (int el: nums) {
+    if (el == 0) ++zeros_counter;
+    if (el == 1) ++unit_counter;
+  }
+  int upper_bound = zeros_counter + unit_counter;
+
+  for (int zer_ind = 0; zer_ind < zeros_counter; ++zer_ind) {
+    nums[zer_ind] = 0;
+  }
+  for (int unit_ind = zeros_counter; unit_ind < upper_bound; ++unit_ind) {
+    nums[unit_ind] = 1;
+  }
+  for (int two_ind = upper_bound; two_ind < sz; ++two_ind) {
+    nums[two_ind] = 2;
+  }
+}
+
+template <size_t sz>
+void SortEven(std::array<int, sz>& nums) {
+
+  size_t first_even_ind = 0, first_uneven_ind = 0;
+  bool is_find_even = false, is_find_uneven = false;
+
+  for (size_t ind = 0; ind < sz && !is_find_even && !is_find_uneven; ++ind) {
+    if (!is_find_even && nums[ind] % 2 == 0) {
+      first_even_ind = ind;
+      is_find_even = true;
+    } else if (!is_find_uneven && nums[ind] % 2 == 0) {
+      first_uneven_ind = ind;
+      is_find_uneven = true;
+    }
+  }
+
+  size_t even_ptr = first_even_ind, uneven_ptr = first_uneven_ind;
+  while (even_ptr < sz && uneven_ptr < sz) {
+
+    if (uneven_ptr < even_ptr &&
+        nums[even_ptr] % 2 == 0 &&
+        nums[uneven_ptr] % 2 != 0 ) {
+      std::swap(nums[even_ptr], nums[uneven_ptr]);
+    }
+
+    if (nums[even_ptr] % 2 != 0)   ++even_ptr;
+    if (nums[uneven_ptr] % 2 == 0) ++uneven_ptr;
+  }
+}
+
+template <size_t sz>
+void MoveZeros(std::array<int ,sz>& nums) {
+
+  size_t notzero_ind = 0, zero_ind = 0;
+  bool is_find_notzero = false, is_find_zero = false;
+
+  for (size_t ind = 0; ind < sz && !is_find_notzero && !is_find_zero; ++ind) {
+    if (!is_find_notzero && nums[ind] != 0) {
+      notzero_ind = ind;
+      is_find_notzero = true;
+    } else if (!is_find_zero && nums[ind] == 0) {
+      zero_ind = ind;
+      is_find_zero = true;
+    }
+  }
+
+  size_t zero_ptr = zero_ind, notzero_ptr = notzero_ind;
+  while (zero_ptr < sz && notzero_ptr < sz) {
+
+    if (zero_ptr < notzero_ptr &&
+        nums[zero_ptr] == 0 &&
+        nums[notzero_ptr] != 0 ) {
+      std::swap(nums[zero_ptr], nums[notzero_ptr]);
+    }
+
+    if (nums[zero_ptr] != 0)    ++zero_ptr;
+    if (nums[notzero_ptr] == 0) ++notzero_ptr;
+  }
+}
 
 #endif
