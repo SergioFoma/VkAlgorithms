@@ -1,0 +1,3 @@
+/Users/foma/Documents/VkAlgorithms/arrays/Build/CMakeFiles/algorithms.dir
+/Users/foma/Documents/VkAlgorithms/arrays/Build/CMakeFiles/edit_cache.dir
+/Users/foma/Documents/VkAlgorithms/arrays/Build/CMakeFiles/rebuild_cache.dir
