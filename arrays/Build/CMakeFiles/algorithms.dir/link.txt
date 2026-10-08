@@ -1,1 +1,0 @@
-/usr/bin/c++ -O2 -Wall -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/algorithms.dir/main.cpp.o CMakeFiles/algorithms.dir/algorithms.cpp.o -o algorithms
