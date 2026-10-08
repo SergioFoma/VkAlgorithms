@@ -8,7 +8,6 @@
 
 namespace {
 
-// Helper: builds a std::array<int, sz> from an initializer list.
 template <size_t sz>
 std::array<int, sz> MakeArray(std::initializer_list<int> init) {
   std::array<int, sz> arr{};
@@ -118,7 +117,7 @@ TEST(RingShift, ShiftBySizeIsIdentity) {
 
 TEST(RingShift, ShiftLargerThanSize) {
   auto nums = MakeArray<5>({1, 2, 3, 4, 5});
-  RingShift(nums, 7);  // equivalent to shift right by 2
+  RingShift(nums, 7);
   EXPECT_EQ(nums, MakeArray<5>({4, 5, 1, 2, 3}));
 }
 
@@ -248,7 +247,6 @@ TEST(IsValid, ThrowsWhenArraysBothEmpty) {
 }
 
 TEST(IsValid, ReturnsLastValidIndexBeforeZeroZone) {
-  // Contract (via FindZero): cursor to the last real element.
   std::array<int, 5> arr_1 = {1, 2, 0, 0, 0};
   EXPECT_EQ(IsValid(arr_1, 3), 1);
 }

@@ -54,7 +54,6 @@ void Reverse(std::array<int, sz>& nums) {
   }
 }
 
-
 /*!
 * counter - how many elements i processed
 */
