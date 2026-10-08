@@ -7,8 +7,20 @@ project(${ALGORITHMS})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-O2 -Wall")
-
 set(INCLUDE ${PROJECT_SOUR_DIR})
+
+# == download libs ===
+include(FetchContent)
+
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/heads/v1.18.x.zip
+)
+#FetchContent_Declare(
+#  googlebenchmark
+#  URL https://github.com/google/benchmark/archive/refs/tags/v1.9.1.zip
+#)
+FetchContent_MakeAvailable(googletest)
 
 # === algorithms ===
 add_executable(${ALGORITHMS})
@@ -16,14 +28,6 @@ target_sources(${ALGORITHMS} PRIVATE main.cpp)
 target_include_directories(${ALGORITHMS} PRIVATE ${INCLUDE})
 
 # === tests ====
-include(FetchContent)
-
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/heads/v1.18.x.zip
-)
-FetchContent_MakeAvailable(googletest)
-
 enable_testing()
 
 include(GoogleTest)
@@ -35,4 +39,20 @@ target_include_directories(${ALGORITHM_TESTS} PRIVATE ${INCLUDE})
 target_link_libraries(${ALGORITHM_TESTS} PRIVATE GTest::gtest_main)
 
 gtest_discover_tests(${ALGORITHM_TESTS})
+
+# === benchmark ===
+
+#set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+#set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+
+#set(BENCHMARK benchmark)
+#add_executable(${BENCHMARK})
+
+#target_sources(${BENCH_MARK} PRIVATE benchmark.cpp)
+#target_include_directories(${BENCHMARK} PRIVATE ${INCLUDE})
+#target_link_libraries(${BENCHMARK} PRIVATE
+#  benchmark::benchmark
+#  benchmark::benchmark_main
+#)
+
 

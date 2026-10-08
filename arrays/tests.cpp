@@ -20,8 +20,6 @@ std::array<int, sz> MakeArray(std::initializer_list<int> init) {
 }
 
 // ===================== 1. TwoSum =====================
-// Two pointers on a sorted array: find a pair summing to target.
-// Returns {0, 0} when no pair exists.
 
 TEST(TwoSum, FindsPair) {
   auto nums = MakeArray<6>({1, 2, 4, 5, 6, 9});
@@ -99,9 +97,6 @@ TEST(Reverse, DoubleReverseIsIdentity) {
 }
 
 // ===================== 3. RingShift =====================
-// Cyclic (ring) shift of elements to the right by `shift` positions.
-// NOTE: correct for shift coprime with array size (a single cycle covers
-// all elements); otherwise the algorithm revisits only part of the ring.
 
 TEST(RingShift, ShiftRightByTwo) {
   auto nums = MakeArray<5>({1, 2, 3, 4, 5});
@@ -134,7 +129,6 @@ TEST(RingShift, ShiftRightByThree) {
 }
 
 // ===================== 4. MergeArrays =====================
-// Merges two sorted arrays into one sorted array.
 
 TEST(MergeArrays, Interleaved) {
   auto a = MakeArray<3>({1, 3, 5});
@@ -179,9 +173,6 @@ TEST(MergeArrays, EmptyFirst) {
 }
 
 // ===================== 5. FindZero =====================
-// Contract: index of the last element before the zero zone, i.e. the
-// "last valid element" cursor used by CheapMergeArrays. When there is no
-// zero, the whole array is valid and the result is the last index.
 
 TEST(FindZero, ZeroAtFront) {
   auto nums = MakeArray<3>({0, 1, 2});
@@ -204,9 +195,6 @@ TEST(FindZero, SingleValidElementThenZeros) {
 }
 
 // ===================== 6. IsValid / CheapMergeArrays =====================
-// arr_1 = valid elements + zero marker + free tail, merges sorted arr_2
-// into arr_1 in place (backward merge). IsValid throws when arr_2 does not
-// fit.
 
 TEST(CheapMergeArrays, AppendsGreaterElement) {
   std::array<int, 4> arr_1 = {1, 2, 3, 0};
@@ -243,11 +231,6 @@ TEST(CheapMergeArrays, ThrowsWhenArr2DoesNotFit) {
 }
 
 TEST(CheapMergeArrays, PreconditionViolatedWithoutZeroMarker) {
-  // CheapMergeArrays requires a zero marker: FindZero (contract: index of
-  // the last valid element before the zero zone) falls back to the very
-  // last index when no zero exists, so the backward copy shifts elements
-  // and corrupts the array: {1,2,3,4} + {5} -> {5,5,5,5}. The check
-  // zero_ind == -1 in IsValid cannot catch this. Documented as-is.
   std::array<int, 4> arr_1 = {1, 2, 3, 4};
   const std::array<int, 1> arr_2 = {5};
   CheapMergeArrays(arr_1, arr_2);
@@ -271,10 +254,6 @@ TEST(IsValid, ReturnsLastValidIndexBeforeZeroZone) {
 }
 
 // ===================== 7. MinSubarray =====================
-// Shortest contiguous subarray of positive numbers with sum >= target.
-// Empty result when no such subarray exists.
-// NOTE: CURRENT BEHAVIOR reads out of bounds in the no-solution case and
-// returns garbage — NoSolutionFailsUntilFixed documents this.
 
 TEST(MinSubarray, TypicalCase) {
   auto nums = MakeArray<6>({2, 3, 1, 2, 4, 3});
@@ -307,7 +286,6 @@ TEST(MinSubarray, NoSolutionReturnsEmpty) {
 }
 
 // ===================== 8. Sort =====================
-// Array of 0s and 1s: zeros first, then ones (counting).
 
 TEST(Sort, MixedZerosAndOnes) {
   auto nums = MakeArray<6>({1, 0, 1, 0, 1, 0});
@@ -340,7 +318,6 @@ TEST(Sort, Reversed) {
 }
 
 // ===================== 9. NetherlandsFlag =====================
-// Sort array of 0s, 1s and 2s (counting into three bands).
 
 TEST(NetherlandsFlag, TypicalCase) {
   auto nums = MakeArray<8>({2, 0, 2, 1, 1, 0, 1, 2});
@@ -373,11 +350,6 @@ TEST(NetherlandsFlag, EachValueOnce) {
 }
 
 // ===================== 10. SortEven =====================
-// Partition so that even numbers precede odd ones (order within groups is
-// not guaranteed).
-// NOTE: CURRENT BEHAVIOR loops forever when the array starts with an even
-// number and still contains an odd one — such inputs are deliberately not
-// covered here.
 
 TEST(SortEven, BasicPartition) {
   auto nums = MakeArray<4>({1, 2, 3, 4});
@@ -416,10 +388,6 @@ TEST(SortEven, EvensEndUpBeforeOdds) {
 }
 
 // ===================== 11. MoveZeros =====================
-// Move all zeros to the end, keeping the relative order of non-zero
-// elements.
-// NOTE: CURRENT BEHAVIOR loops forever when the array starts with a
-// non-zero element and zeros follow it — such inputs are not covered here.
 
 TEST(MoveZeros, TypicalCase) {
   auto nums = MakeArray<5>({0, 1, 0, 3, 12});
