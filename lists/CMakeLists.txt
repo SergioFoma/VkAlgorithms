@@ -15,8 +15,12 @@ FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/heads/v1.18.x.zip
 )
+FetchContent_Declare(
+  googlebenchmark
+  URL https://github.com/google/benchmark/archive/refs/tags/v1.9.1.zip
+)
 
-FetchContent_MakeAvailable(googletest)
+FetchContent_MakeAvailable(googletest googlebenchmark)
 
 # === list ===
 add_executable(${LIST})
@@ -45,3 +49,17 @@ target_link_libraries(${ALGORITHM_TESTS} PRIVATE GTest::gtest_main)
 
 gtest_discover_tests(${ALGORITHM_TESTS})
 
+# === benchmark ===
+
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+
+set(BENCHMARK_TARGET benchmark_target)
+add_executable(${BENCHMARK_TARGET})
+
+target_sources(${BENCHMARK_TARGET} PRIVATE benchmarks.cpp algorithms.cpp)
+target_include_directories(${BENCHMARK_TARGET} PRIVATE ${INCLUDE})
+target_link_libraries(${BENCHMARK_TARGET} PRIVATE
+  benchmark::benchmark
+  benchmark::benchmark_main
+)

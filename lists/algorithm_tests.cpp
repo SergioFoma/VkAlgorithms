@@ -1,5 +1,6 @@
 #include <stack>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -21,10 +22,31 @@ std::vector<T> PopAll(std::stack<T> stack) {
   return result;
 }
 
+// Counts live instances to check that lists free every node exactly once.
+struct Tracked {
+  static inline int alive = 0;
+
+  Tracked() { ++alive; }
+  explicit Tracked(int v) : val(v) { ++alive; }
+  Tracked(const Tracked& other) : val(other.val) { ++alive; }
+  Tracked& operator=(const Tracked&) = default;
+  ~Tracked() { --alive; }
+
+  bool operator==(const Tracked& other) const { return val == other.val; }
+  bool operator<(const Tracked& other) const { return val < other.val; }
+  bool operator<=(const Tracked& other) const { return val <= other.val; }
+
+  int val = 0;
+};
+
 }  // namespace
 
 namespace {
 
+// ConnectingLists splices nodes of both lists into one chain, but leaves
+// second.head_ pointing at a node that now belongs to first. With the new
+// ~List this means a double delete, so tests must detach `second` from the
+// shared chain before it goes out of scope.
 template <typename T>
 void ReleaseOwnership(List<T>& lst) {
   lst.SetNewHead(new Node<T>{});
@@ -48,6 +70,27 @@ std::vector<T> Chain(const Node<T>* head, size_t limit = 16) {
   }
   return result;
 }
+
+// RAII: closes a ring for the duration of a test and reopens the chain on
+// scope exit, so ~List never recurses through a cycle even if an assertion
+// aborts the test body early.
+class ScopedRing {
+ public:
+  ScopedRing(Node<int>* tail, Node<int>* target)
+      : tail_(tail), saved_(tail->next) {
+    tail_->next = target;
+  }
+  ~ScopedRing() { tail_->next = saved_; }
+
+  ScopedRing(const ScopedRing&) = delete;
+  ScopedRing& operator=(const ScopedRing&) = delete;
+
+  void Break() { tail_->next = saved_; }
+
+ private:
+  Node<int>* tail_;
+  Node<int>* saved_;
+};
 
 }  // namespace
 
@@ -73,9 +116,8 @@ TEST(IsRingTest, PlainListIsNotRing) {
 TEST(IsRingTest, SelfLoopIsRing) {
   List<int> lst(1);
   Node<int>* node = &lst.Front();
-  node->next = node;
+  ScopedRing closer(node, node);
   EXPECT_TRUE(algorithm::IsRing(lst));
-  node->next = nullptr;
 }
 
 TEST(IsRingTest, ClosedTailIsRing) {
@@ -84,9 +126,9 @@ TEST(IsRingTest, ClosedTailIsRing) {
   lst.PushBack(2);
   lst.PushBack(3);
   Node<int>* tail = Tail(lst);
-  tail->next = &lst.Front();
+  ScopedRing closer(tail, &lst.Front());
   EXPECT_TRUE(algorithm::IsRing(lst));
-  tail->next = nullptr;
+  closer.Break();
   EXPECT_FALSE(algorithm::IsRing(lst));
 }
 
@@ -97,9 +139,8 @@ TEST(IsRingTest, RhoShapedRingIsRing) {
   lst.PushBack(3);
   lst.PushBack(4);
   Node<int>* tail = Tail(lst);
-  tail->next = lst.Front().next;
+  ScopedRing closer(tail, lst.Front().next);
   EXPECT_TRUE(algorithm::IsRing(lst));
-  tail->next = nullptr;
 }
 
 TEST(ReverseTest, EmptyStaysEmpty) {
@@ -151,6 +192,23 @@ TEST(ReverseTest, ReverseTwiceRestoresOrder) {
   algorithm::Reverse(lst);
   EXPECT_EQ(&lst.Front(), old_head);
   EXPECT_EQ(Chain(&lst.Front()), std::vector<int>({1, 2, 3, 4}));
+}
+
+TEST(ReverseTest, ResultIsStillOwnedByTheList) {
+  // Reverse only permutes links, so ~List must free every node exactly once
+  // (ASan turns a lost or doubled link into a crash here).
+  const int base = Tracked::alive;
+  {
+    List<Tracked> lst(Tracked{0});
+    lst.PushBack(Tracked{1});
+    lst.PushBack(Tracked{2});
+    Node<Tracked>* old_head = &lst.Front();
+    algorithm::Reverse(lst);
+    ASSERT_EQ(Chain(&lst.Front()),
+              std::vector<Tracked>({Tracked{2}, Tracked{1}, Tracked{0}}));
+    ASSERT_EQ(Tail(lst), old_head);  // same nodes, permuted links
+  }
+  EXPECT_EQ(Tracked::alive, base);
 }
 
 TEST(FindMiddleTest, EmptyReturnsNullptr) {
@@ -246,6 +304,20 @@ TEST(DeleteElemTest, DuplicatesDeleteFirstOnly) {
   ASSERT_NE(next, nullptr);
   EXPECT_EQ(next->val, 7);
   EXPECT_EQ(Chain(&lst.Front()), std::vector<int>({7, 8}));
+}
+
+TEST(DeleteElemTest, DeletedNodeIsFreedExactlyOnce) {
+  // ~Node is recursive and Erase unlinks before deleting, so each node must
+  // die exactly once; ASan aborts on the second delete otherwise.
+  const int base = Tracked::alive;
+  {
+    List<Tracked> lst(Tracked{1});   // sentinel + node(1)
+    lst.PushBack(Tracked{2});        // + node(2)
+    EXPECT_EQ(Tracked::alive, base + 3);
+    lst.Erase(Tracked{1});           // frees node(1) only
+    EXPECT_EQ(Tracked::alive, base + 2);
+  }
+  EXPECT_EQ(Tracked::alive, base);
 }
 
 TEST(FindSubstrTest, EmptySourceIsAlwaysFound) {
@@ -417,6 +489,7 @@ TEST(ConnectingListsTest, MergesInterleavedSorted) {
   List<int>& merged = algorithm::ConnectingLists(first, second);
   EXPECT_EQ(&merged, &first);
   EXPECT_EQ(Chain(&merged.Front()), std::vector<int>({1, 2, 3, 4, 5}));
+  // Now both lists own the merged chain, ~List would delete it twice.
   ReleaseOwnership(second);
 }
 
@@ -478,4 +551,94 @@ TEST(ConnectingListsTest, MergesLargerLists) {
   EXPECT_EQ(Chain(&first.Front(), 64),
             std::vector<int>({1, 2, 3, 4, 5, 7, 8, 9, 10, 11}));
   ReleaseOwnership(second);
+}
+
+TEST(ConnectingListsTest, MergedChainFreedExactlyOnce) {
+  // 3 + 3 nodes; after the merge they all live in first's chain and must
+  // be deleted exactly once (ASan aborts on the second delete otherwise).
+  const int base = Tracked::alive;
+  {
+    List<Tracked> first(Tracked{1});
+    first.PushBack(Tracked{3});
+    List<Tracked> second(Tracked{2});
+    second.PushBack(Tracked{4});
+    algorithm::ConnectingLists(first, second);
+    ReleaseOwnership(second);
+  }
+  EXPECT_EQ(Tracked::alive, base);
+}
+
+// ============================================================================
+// Algorithms must work on moved-into lists (~List now owns the chain).
+// Note: the move operations do not transfer sz_, so these tests inspect the
+// chain through Front()/links instead of Empty()/ToVector().
+// ============================================================================
+
+TEST(MoveTest, ReverseAfterMoveConstructor) {
+  List<int> src;
+  src.PushBack(1);
+  src.PushBack(2);
+  src.PushBack(3);
+
+  List<int> dst(std::move(src));
+  algorithm::Reverse(dst);
+
+  EXPECT_EQ(Chain(&dst.Front()), std::vector<int>({3, 2, 1}));
+}
+
+TEST(MoveTest, IsRingAfterMoveConstructor) {
+  List<int> src;
+  src.PushBack(1);
+  src.PushBack(2);
+  List<int> dst(std::move(src));
+
+  Node<int>* tail = Tail(dst);
+  ScopedRing closer(tail, &dst.Front());
+  EXPECT_TRUE(algorithm::IsRing(dst));
+}
+
+TEST(MoveTest, MoveAfterMergeKeepsSingleOwner) {
+  const int base = Tracked::alive;
+  {
+    List<Tracked> first(Tracked{1});
+    first.PushBack(Tracked{3});
+    List<Tracked> second(Tracked{2});
+    second.PushBack(Tracked{4});
+    algorithm::ConnectingLists(first, second);
+    ReleaseOwnership(second);
+
+    // The whole merged chain lives only in first now; hand it to another
+    // list. Exactly one owner must remain, so ~List frees four nodes once.
+    List<Tracked> merged(std::move(first));
+    EXPECT_EQ(Chain(&merged.Front(), 8).size(), size_t{4});
+  }
+  EXPECT_EQ(Tracked::alive, base);
+}
+
+TEST(MoveTest, MoveAssignmentFreesOldChainBeforeTakingNewOne) {
+  List<int> dst;
+  dst.PushBack(10);
+  dst.PushBack(20);
+
+  List<int> src;
+  src.PushBack(1);
+  src.PushBack(2);
+  src.PushBack(3);
+
+  dst = std::move(src);
+
+  EXPECT_EQ(Chain(&dst.Front()), std::vector<int>({1, 2, 3}));
+}
+
+TEST(MoveTest, EraseAfterMoveAssignment) {
+  List<int> dst;
+  List<int> src;
+  src.PushBack(1);
+  src.PushBack(2);
+  dst = std::move(src);
+
+  Node<int>* next = algorithm::DeleteElem(dst, 1);
+  ASSERT_NE(next, nullptr);
+  EXPECT_EQ(next->val, 2);
+  EXPECT_EQ(Chain(&dst.Front()), std::vector<int>({2}));
 }

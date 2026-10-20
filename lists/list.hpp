@@ -30,9 +30,25 @@ class List {
   }
 
   List(const List& other) = delete;
-  List(List&& other) = delete;
+  List(List&& other): head_(other.head_), sz_(other.sz_) {
+    other.head_.next = nullptr;
+    other.sz_ = 0;
+  };
+
   List& operator=(const List& other) = delete;
-  List& operator=(List&& other) = delete;
+  List& operator=(List&& other) {
+    if (this == &other) {
+      return *this;
+    }
+
+    delete head_.next;
+    head_ = other.head_;
+    sz_ = other.sz_;
+    other.head_.next = nullptr;
+    other.sz_ = 0;
+
+    return *this;
+  };
 
   Node<T>& Front() const {
     return *(head_.next);
@@ -145,6 +161,8 @@ class List {
     assert(node);
     head_.next = node;
   }
+
+  ~List() = default;
 
  private:
   Node<T> head_;
