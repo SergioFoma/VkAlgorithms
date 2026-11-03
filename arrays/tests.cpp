@@ -172,28 +172,35 @@ TEST(MergeArrays, EmptyFirst) {
 }
 
 // ===================== 5. FindZero =====================
+// Вспомогательная функция для CheapMergeArrays: ищет зону хвостовых нулей
+// (свободное место под arr_2) и возвращает индекс последнего значимого
+// элемента перед ней. Особые случаи: -2 - хвостовых нулей нет, -1 - массив
+// целиком состоит из нулей.
 
-TEST(FindZero, ZeroAtFront) {
-  auto nums = MakeArray<3>({0, 1, 2});
-  EXPECT_EQ(FindZero(nums), 0);
-}
-
-TEST(FindZero, LastValidBeforeZeroZone) {
-  auto nums = MakeArray<5>({1, 2, 0, 3, 4});
+TEST(FindZero, ReturnsLastMeaningfulIndex) {
+  auto nums = MakeArray<5>({1, 2, 0, 0, 0});
   EXPECT_EQ(FindZero(nums), 1);
 }
 
-TEST(FindZero, NoZeroReturnsLastIndex) {
-  auto nums = MakeArray<3>({1, 2, 3});
-  EXPECT_EQ(FindZero(nums), 2);
-}
-
-TEST(FindZero, SingleValidElementThenZeros) {
-  auto nums = MakeArray<4>({5, 0, 0, 1});
+TEST(FindZero, SingleTrailingZero) {
+  auto nums = MakeArray<2>({5, 0});
   EXPECT_EQ(FindZero(nums), 0);
 }
 
+TEST(FindZero, NoTrailingZeros) {
+  auto nums = MakeArray<3>({1, 2, 3});
+  EXPECT_EQ(FindZero(nums), -2);
+}
+
+TEST(FindZero, EntireArrayIsZeroPadding) {
+  auto nums = MakeArray<3>({0, 0, 0});
+  EXPECT_EQ(FindZero(nums), -1);
+}
+
 // ===================== 6. IsValid / CheapMergeArrays =====================
+// ТЗ: два отсортированных массива объединяются в один отсортированный
+// внутри arr_1. Размер arr_1 равен размеру результата, его хвост занят
+// нулями (свободное место под элементы arr_2). Третий массив не создаётся.
 
 TEST(CheapMergeArrays, AppendsGreaterElement) {
   std::array<int, 4> arr_1 = {1, 2, 3, 0};
@@ -209,6 +216,13 @@ TEST(CheapMergeArrays, MergesGreaterRange) {
   EXPECT_EQ(arr_1, MakeArray<6>({1, 3, 5, 6, 7, 8}));
 }
 
+TEST(CheapMergeArrays, MergesSmallerRange) {
+  std::array<int, 4> arr_1 = {3, 4, 0, 0};
+  const std::array<int, 2> arr_2 = {1, 2};
+  CheapMergeArrays(arr_1, arr_2);
+  EXPECT_EQ(arr_1, MakeArray<4>({1, 2, 3, 4}));
+}
+
 TEST(CheapMergeArrays, Interleaves) {
   std::array<int, 6> arr_1 = {1, 3, 5, 0, 0, 0};
   const std::array<int, 3> arr_2 = {2, 4, 6};
@@ -216,24 +230,43 @@ TEST(CheapMergeArrays, Interleaves) {
   EXPECT_EQ(arr_1, MakeArray<6>({1, 2, 3, 4, 5, 6}));
 }
 
-TEST(CheapMergeArrays, MergingEmptyArrayChangesNothing) {
-  std::array<int, 3> arr_1 = {0, 0, 0};
-  const std::array<int, 0> arr_2 = {};
+TEST(CheapMergeArrays, HandlesInternalZeroInArr1) {
+  // Значимый элемент может быть равен нулю, если хвостовые нули
+  // отделены от него ненулевым элементом (arr_1: -2, 0, 4 + пустота).
+  std::array<int, 5> arr_1 = {-2, 0, 4, 0, 0};
+  const std::array<int, 2> arr_2 = {1, 3};
   CheapMergeArrays(arr_1, arr_2);
-  EXPECT_EQ(arr_1, MakeArray<3>({0, 0, 0}));
+  EXPECT_EQ(arr_1, MakeArray<5>({-2, 0, 1, 3, 4}));
 }
 
-TEST(CheapMergeArrays, ThrowsWhenArr2DoesNotFit) {
-  std::array<int, 2> arr_1 = {1, 2};
-  const std::array<int, 3> arr_2 = {4, 5, 6};
+TEST(CheapMergeArrays, DuplicatesAcrossArrays) {
+  std::array<int, 4> arr_1 = {1, 2, 0, 0};
+  const std::array<int, 2> arr_2 = {2, 3};
+  CheapMergeArrays(arr_1, arr_2);
+  EXPECT_EQ(arr_1, MakeArray<4>({1, 2, 2, 3}));
+}
+
+TEST(CheapMergeArrays, EmptySecondArrayRequiresZeroMarker) {
+  // ТЗ: значения в конце arr_1 равны нулям. Реализация требует маркер
+  // хвостовых нулей даже когда arr_2 пуст.
+  std::array<int, 3> arr_1 = {1, 2, 3};
+  const std::array<int, 0> arr_2 = {};
   EXPECT_THROW(CheapMergeArrays(arr_1, arr_2), std::runtime_error);
 }
 
-TEST(CheapMergeArrays, PreconditionViolatedWithoutZeroMarker) {
-  std::array<int, 4> arr_1 = {1, 2, 3, 4};
-  const std::array<int, 1> arr_2 = {5};
+TEST(CheapMergeArrays, AllZeroPaddingFillsWithSecondArray) {
+  // Значимых элементов в arr_1 нет, весь массив - место под arr_2.
+  std::array<int, 3> arr_1 = {0, 0, 0};
+  const std::array<int, 3> arr_2 = {1, 2, 3};
   CheapMergeArrays(arr_1, arr_2);
-  EXPECT_EQ(arr_1, MakeArray<4>({5, 5, 5, 5}));
+  EXPECT_EQ(arr_1, MakeArray<3>({1, 2, 3}));
+}
+
+TEST(CheapMergeArrays, ThrowsWhenArr2DoesNotFit) {
+  // Хвост arr_1 короче, чем размер arr_2: условие ТЗ нарушено.
+  std::array<int, 2> arr_1 = {1, 2};
+  const std::array<int, 3> arr_2 = {4, 5, 6};
+  EXPECT_THROW(CheapMergeArrays(arr_1, arr_2), std::runtime_error);
 }
 
 TEST(IsValid, ThrowsOnInsufficientSpace) {
@@ -244,6 +277,12 @@ TEST(IsValid, ThrowsOnInsufficientSpace) {
 TEST(IsValid, ThrowsWhenArraysBothEmpty) {
   std::array<int, 0> arr_1 = {};
   EXPECT_THROW(IsValid(arr_1, 0), std::runtime_error);
+}
+
+TEST(IsValid, AllowsAllZeroPadding) {
+  // Весь arr_1 - место под arr_2: значимых элементов нет, это легально.
+  std::array<int, 3> arr_1 = {0, 0, 0};
+  EXPECT_EQ(IsValid(arr_1, 3), -1);
 }
 
 TEST(IsValid, ReturnsLastValidIndexBeforeZeroZone) {
@@ -415,6 +454,29 @@ TEST(MoveZeros, SingleZeroInMiddle) {
   auto nums = MakeArray<5>({0, 4, 1, 9, 2});
   MoveZeros(nums);
   EXPECT_EQ(nums, MakeArray<5>({4, 1, 9, 2, 0}));
+}
+
+// Регрессия: ненулевой префикс перед нулём. В прошлой версии notzero_ptr
+// двигался только с нулевых позиций и застревал на ненулевом элементе -
+// бесконечный цикл. Сейчас notzero_ptr идёт безусловно.
+TEST(MoveZeros, NonzeroPrefixWithZeroAtEnd) {
+  auto nums = MakeArray<4>({1, 2, 0, 3});
+  MoveZeros(nums);
+  EXPECT_EQ(nums, MakeArray<4>({1, 2, 3, 0}));
+}
+
+TEST(MoveZeros, PreservesRelativeOrderOfNonzeros) {
+  auto nums = MakeArray<7>({5, 0, 6, 0, 0, 7, 1});
+  MoveZeros(nums);
+  EXPECT_EQ(nums, MakeArray<7>({5, 6, 7, 1, 0, 0, 0}));
+}
+
+// Регрессия: массив, начинающийся с ненулевого элемента и с нулём на границе
+// (раньше здесь был вечный цикл: zero_ptr и notzero_ptr расходились).
+TEST(MoveZeros, InterleavedStartingWithNonzero) {
+  auto nums = MakeArray<5>({5, 0, 6, 0, 7});
+  MoveZeros(nums);
+  EXPECT_EQ(nums, MakeArray<5>({5, 6, 7, 0, 0}));
 }
 
 }  // namespace

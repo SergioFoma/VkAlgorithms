@@ -29,9 +29,9 @@ void ReverseTest() {
 }
 
 void ShiftTest() {
-  const size_t kSz = 7;
-  size_t k = 3;
-  std::array<int, kSz> arr = {1, 2, 3, 4, 5, 6, 7};
+  const size_t kSz = 4;
+  size_t k = 2;
+  std::array<int, kSz> arr = {1, 2, 3, 4};
 
   RingShift(arr, k);
   PrintArr(arr);
@@ -50,11 +50,11 @@ void MergeArraysTest() {
 }
 
 void CheapMergeTest() {
-  const size_t kArrSz1 = 7;
-  const size_t kArrSz2 = 3;
+  const size_t kArrSz1 = 5;
+  const size_t kArrSz2 = 2;
 
-  std::array<int, kArrSz1> arr_1 = {3, 8, 10, 11};
-  std::array<int, kArrSz2> arr_2 = {1, 7, 9};
+  std::array<int, kArrSz1> arr_1 = {-2, 0, 4, 0, 0};
+  std::array<int, kArrSz2> arr_2 = {1, 3};
 
   CheapMergeArrays(arr_1, arr_2);
 
@@ -118,11 +118,18 @@ void MoveZerosTest() {
   MoveZeros(arr_3);
   std::cout << "\n=====Move Zeros (Test 3)=====\n";
   PrintArr(arr_3);
+
+  const size_t kArrSz4 = 2;
+  std::array<int, kArrSz4> arr_4 = {1, 0};
+  MoveZeros(arr_4);
+  std::cout << "\n=====Move Zeros (Test 4)=====\n";
+  PrintArr(arr_4);
 }
 } // namespace
 
 int main() {              // Task:
 
+  /*
   TwoSumTest();           // 1.
   ReverseTest();          // 2.
   ShiftTest();            // 3.
@@ -133,4 +140,9 @@ int main() {              // Task:
   NetherlandsFlagTest();  // 8.
   SortEvenTest();         // 9.
   MoveZerosTest();        // 10.
+  */
+
+  ShiftTest();
+  CheapMergeTest();
+  MoveZerosTest();
 }

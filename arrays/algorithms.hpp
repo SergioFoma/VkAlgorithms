@@ -57,23 +57,27 @@ void Reverse(std::array<int, sz>& nums) {
 /*!
 * counter - how many elements i processed
 */
+
+template <size_t sz>
+void ReverseArray(std::array<int, sz>& nums , size_t left, size_t right) {
+  while (left < right) {
+    std::swap(nums[left], nums[right]);
+    left++;
+    right--;
+  }
+}
+
 template <size_t sz>
 void RingShift(std::array<int, sz>& nums, size_t shift) {
+  shift = shift % sz;
 
-  if (sz == 0) {
+  if (shift == 0 || sz == 0) {
     return ;
   }
 
-  size_t counter = 0, ind = 0;
-  int saved_elem = nums[ind];
-  int current_elem = saved_elem;
-  while (counter < sz) {
-    ind = (ind + shift) % sz;
-    saved_elem = nums[ind];
-    nums[ind] = current_elem;
-    current_elem = saved_elem;
-    ++counter;
-  }
+  ReverseArray(nums, 0     , sz - 1);
+  ReverseArray(nums, 0     , shift - 1);
+  ReverseArray(nums, shift , sz - 1);
 }
 
 template <size_t sz_1, size_t sz_2>
@@ -111,13 +115,13 @@ std::array<int, sz_1 + sz_2> MergeArrays(std::array<int, sz_1>& arr_1,
 
 template <size_t sz>
 int FindZero(const std::array<int, sz>& arr) {
-  int return_val = (arr[0] == 0 ? 0 : -1);
+  int return_val = -1;
 
-  for (size_t ind = 0; ind < sz && arr[ind] != 0; ++ind) {
+  for (int ind = static_cast<int>(sz) - 1; ind >= 0 && arr[ind] == 0; --ind) {
     return_val = static_cast<int>(ind);
   }
 
-  return return_val;
+  return return_val - 1;
 }
 
 template <size_t sz_1>
@@ -130,7 +134,7 @@ int IsValid(const std::array<int, sz_1>& arr_1, size_t sz_2) {
   }
 
   int zero_ind = FindZero(arr_1);
-  if (zero_ind== -1) {
+  if (zero_ind== -2) {
     throw std::runtime_error("CheapMergeArrays: Zero element wasn't found!");
   }
 
@@ -289,7 +293,7 @@ void MoveZeros(std::array<int ,sz>& nums) {
     }
 
     if (nums[zero_ptr] != 0)    ++zero_ptr;
-    if (nums[notzero_ptr] == 0) ++notzero_ptr;
+                                ++notzero_ptr;
   }
 }
 

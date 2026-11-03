@@ -33,8 +33,3 @@ Build/algorithms
 ```bash
 Build/algorithm_tests
 ```
-
-**Запуск google benchmark:**
-```bash
-Build/benchmark_target
-```
