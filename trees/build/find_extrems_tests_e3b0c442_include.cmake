@@ -1,0 +1,5 @@
+if(EXISTS "/Users/foma/Documents/VkAlgorithms/trees/build/find_extrems_tests_e3b0c442_tests.cmake")
+  include("/Users/foma/Documents/VkAlgorithms/trees/build/find_extrems_tests_e3b0c442_tests.cmake")
+else()
+  add_test(find_extrems_tests_NOT_BUILT find_extrems_tests_NOT_BUILT)
+endif()

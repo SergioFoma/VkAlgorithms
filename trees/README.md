@@ -5,6 +5,8 @@
 ├── create_tree.hpp                 # создание бинарного дерева
 ├── main.cpp                        # main
 ├── min_depth.hpp                   # нахождение минимальной глубины
+|── find_extremes.hpp               # нахождение произведения максимума и минимума дерева
+├── compare_trees.hpp               # сравнение деревьев        
 ├── symmetrical_check.hpp           # проверка на симметричность
 ├── tree.hpp                        # объявление дерева
 └── unit_tests.cpp                  # unit тесты

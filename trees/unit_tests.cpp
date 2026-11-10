@@ -6,7 +6,9 @@
 
 #include <gtest/gtest.h>
 
+#include "compare_trees.hpp"
 #include "create_tree.hpp"
+#include "find_extremes.hpp"
 #include "min_depth.hpp"
 #include "symmetrical_check.hpp"
 #include "tree.hpp"
@@ -699,3 +701,348 @@ TEST(MinDepth, SixElementsShortestLeafAtDepthThree) {
   tree::Tree<int> t = tree::CreateTree(std::array{1, 2, 3, 4, 5, 6});
   EXPECT_EQ(FindMinDepth(t), 3u);
 }
+
+// =========================================================================
+// 5. DoMull: произведение min и max в BST, заданной level-order массивом
+//
+// Массив — complete-раскладка BST: дети узла i в позициях 2i+1 (левый)
+// и 2i+2 (правый). Минимум — самый левый узел (спуск 2i+1), максимум —
+// самый правый узел (спуск 2i+2). Спуск по одной ветке — O(h), h — высота.
+// =========================================================================
+
+namespace {
+
+// Истинные min/max для complete-BST массива (эталон для сравнения):
+// спуск влево: 0 -> 1 -> 3 -> 7..., спуск вправо: 0 -> 2 -> 6 -> 14...
+std::pair<int, int> TrueMinMax(const std::vector<int>& arr) {
+  int mn = arr[0];
+  size_t i = 1;
+  while (i < arr.size()) {
+    mn = arr[i];
+    i = 2 * i + 1;
+  }
+
+  int mx = arr[0];
+  size_t j = 2;
+  while (j < arr.size()) {
+    mx = arr[j];
+    j = 2 * j + 2;
+  }
+  return {mn, mx};
+}
+
+}  // namespace
+
+TEST(FindExtremes, SingleElementProductIsSquare) {
+  std::array<int, 1> arr = {42};
+  EXPECT_EQ(tree::DoMull(arr), 42 * 42);
+}
+
+TEST(FindExtremes, AllSameValuesProductIsSquare) {
+  std::array<int, 7> arr = {7, 7, 7, 7, 7, 7, 7};
+  EXPECT_EQ(tree::DoMull(arr), 49);
+}
+
+TEST(FindExtremes, TwoElementsMinIsLeftChild) {
+  //      10
+  //     /
+  //    3
+  std::array<int, 2> arr = {10, 3};
+  EXPECT_EQ(tree::DoMull(arr), 30);
+}
+
+TEST(FindExtremes, BasicBstDepthTwo) {
+  //      7
+  //     / \
+  //    4   9
+  std::array<int, 3> arr = {7, 4, 9};
+  EXPECT_EQ(tree::DoMull(arr), 36);
+}
+
+TEST(FindExtremes, ClassicBstDepthThree) {
+  //          10
+  //        /    \
+  //       5     15
+  //      / \    / \
+  //     3   7  12  20
+  std::array<int, 7> arr = {10, 5, 15, 3, 7, 12, 20};
+  EXPECT_EQ(tree::DoMull(arr), 3 * 20);
+}
+
+TEST(FindExtremes, IncompleteLastLevelLeftDeep) {
+  //          10
+  //        /    \
+  //       5     15
+  //      /
+  //     3
+  std::array<int, 4> arr = {10, 5, 15, 3};
+  EXPECT_EQ(tree::DoMull(arr), 3 * 15);
+}
+
+TEST(FindExtremes, IncompleteLastLevelRightOnly) {
+  //          10
+  //        /    \
+  //       5     15
+  //        \
+  //         7
+  std::array<int, 5> arr = {10, 5, 15, 3, 7};
+  EXPECT_EQ(tree::DoMull(arr), 3 * 15);
+}
+
+TEST(FindExtremes, FullBstDepthFour) {
+  //              8
+  //           /     \
+  //          4      12
+  //         / \    /  \
+  //        2   6  10  14
+  //       /\  /\  /\  /\
+  //      1  3 5 7 9 11 13 15
+  std::array<int, 15> arr = {8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15};
+  EXPECT_EQ(tree::DoMull(arr), 15);  // 1 * 15
+}
+
+TEST(FindExtremes, NegativeValues) {
+  //          -1
+  //        /    \
+  //      -5      2
+  //      / \    / \
+  //    -8  -3  1   3
+  std::array<int, 7> arr = {-1, -5, 2, -8, -3, 1, 3};
+  EXPECT_EQ(tree::DoMull(arr), -24);  // -8 * 3
+}
+
+TEST(FindExtremes, ZeroRoot) {
+  //       0
+  //      / \
+  //    -1   1
+  std::array<int, 3> arr = {0, -1, 1};
+  EXPECT_EQ(tree::DoMull(arr), -1);
+}
+
+TEST(FindExtremes, MaxEqualsRootWhenNoRightChild) {
+  //      15
+  //     /
+  //    7
+  // Единственный способ для complete-раскладки не иметь правого ребёнка
+  // корня при двух элементах: максимум тогда в корне.
+  std::array<int, 2> arr = {15, 7};
+  EXPECT_EQ(tree::DoMull(arr), 105);  // 7 * 15
+}
+
+TEST(FindExtremes, Int64AvoidsOverflow) {
+  //        100000
+  //        /     \
+  //    50000    200000
+  std::array<int64_t, 3> arr = {100000, 50000, 200000};
+  EXPECT_EQ(tree::DoMull(arr), int64_t{50000} * 200000);
+}
+
+TEST(FindExtremes, DoubleValues) {
+  std::array<double, 3> arr = {2.5, 1.5, 3.5};
+  EXPECT_EQ(tree::DoMull(arr), 1.5 * 3.5);
+}
+
+TEST(FindExtremes, AgreesWithTrueMinMaxReference) {
+  // сверка DoMull с эталонным поиском min/max по level-order раскладке
+  std::array<int, 7> arr = {10, 5, 15, 3, 7, 12, 20};
+  std::vector<int> ref(arr.begin(), arr.end());
+
+  auto [mn, mx] = TrueMinMax(ref);
+  EXPECT_EQ(mn, 3);
+  EXPECT_EQ(mx, 20);
+  EXPECT_EQ(tree::DoMull(arr), mn * mx);
+}
+
+TEST(FindExtremes, ConsistentWithCreatedTree) {
+  // DoMull по массиву == min*max, если искать крайние спуском по дереву
+  std::array<int, 7> arr = {10, 5, 15, 3, 7, 12, 20};
+  tree::Tree<int> t = tree::CreateTree(arr);
+
+  // спуск влево от корня ( BST-минимум)
+  auto* node = t.GetRoot();
+  while (node->left) {
+    node = node->left;
+  }
+  const int min_val = node->val;
+
+  // спуск вправо (BST-максимум)
+  node = t.GetRoot();
+  while (node->right) {
+    node = node->right;
+  }
+  const int max_val = node->val;
+
+  EXPECT_EQ(tree::DoMull(arr), min_val * max_val);
+}
+
+// =========================================================================
+// 6. IsIdentical: идентичны ли два дерева (структура + значения), рекурсия
+// =========================================================================
+
+TEST(CompareTrees, TwoEmptyTreesAreIdentical) {
+  tree::Tree<int> t1;
+  tree::Tree<int> t2;
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, EmptyAndSingleAreNotIdentical) {
+  tree::Tree<int> empty;
+  tree::Tree<int> single(1);
+  EXPECT_FALSE(IsIdentical(empty, single));
+  EXPECT_FALSE(IsIdentical(single, empty));  // симметричность проверки
+}
+
+TEST(CompareTrees, TwoSinglesSameValue) {
+  tree::Tree<int> t1(42);
+  tree::Tree<int> t2(42);
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, TwoSinglesDifferentValue) {
+  tree::Tree<int> t1(42);
+  tree::Tree<int> t2(43);
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, SameTreeWithItself) {
+  tree::Tree<int> t = tree::CreateTree(std::array{1, 2, 3, 4, 5});
+  EXPECT_TRUE(IsIdentical(t, t));
+}
+
+TEST(CompareTrees, IdenticalFullTrees) {
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 3, 4, 5, 6, 7});
+  tree::Tree<int> t2 = tree::CreateTree(std::array{1, 2, 3, 4, 5, 6, 7});
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, DifferentValueInOneNode) {
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 3});
+  tree::Tree<int> t2 = tree::CreateTree(std::array{1, 2, 4});  // right 3->4
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, SameShapeDifferentValuesDeep) {
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 3, 4, 5, 6, 7});
+  tree::Tree<int> t2 = tree::CreateTree(std::array{1, 2, 3, 4, 5, 6, 8});
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, SameValuesDifferentShape) {
+  // тот же набор значений, но 2 и 3 поменяны местами — структура разная
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 3});
+  tree::Tree<int> t2 = tree::CreateTree(std::array{1, 3, 2});
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, DifferentSizesOneExtraLeaf) {
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 3});
+  tree::Tree<int> t2 = tree::CreateTree(std::array{1, 2, 3, 4});
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, LeftChildVersusRightChildStructure) {
+  //        1                       1
+  //       /                         \
+  //      2                           2
+  // значение то же, но ребёнок с другой стороны
+  tree::Tree<int> t1(1);
+  t1.GetRoot()->left = new tree::Node<int>(2);
+  tree::Tree<int> t2(1);
+  t2.GetRoot()->right = new tree::Node<int>(2);
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, SameSetDifferentDepthChain) {
+  //        1                       1
+  //       / \                       \
+  //      2   3                       2
+  //                                  \
+  //                                   3
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 3});
+  tree::Tree<int> t2(1);
+  t2.GetRoot()->right = new tree::Node<int>(2);
+  t2.GetRoot()->right->right = new tree::Node<int>(3);
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, DeepIdenticalTrees) {
+  std::array<int, 15> arr = {8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15};
+  tree::Tree<int> t1 = tree::CreateTree(arr);
+  tree::Tree<int> t2 = tree::CreateTree(arr);
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, DeepDifferenceAtLastLevel) {
+  std::array<int, 15> a1 = {8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15};
+  std::array<int, 15> a2 = {8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 16};
+  tree::Tree<int> t1 = tree::CreateTree(a1);
+  tree::Tree<int> t2 = tree::CreateTree(a2);
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, ManualIdenticalTrees) {
+  //          1                  1
+  //         / \                / \
+  //        2   3             2   3
+  //       /                  /
+  //      4                  4
+  tree::Tree<int> t1(1);
+  t1.GetRoot()->left = new tree::Node<int>(2);
+  t1.GetRoot()->right = new tree::Node<int>(3);
+  t1.GetRoot()->left->left = new tree::Node<int>(4);
+
+  tree::Tree<int> t2(1);
+  t2.GetRoot()->left = new tree::Node<int>(2);
+  t2.GetRoot()->right = new tree::Node<int>(3);
+  t2.GetRoot()->left->left = new tree::Node<int>(4);
+
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, ManualTreesDifferInMiddleOfChain) {
+  //        1              1
+  //       /              /
+  //      2             99   <- значение не совпадает уже на втором узле
+  //       \              \
+  //        3              3
+  tree::Tree<int> t1(1);
+  t1.GetRoot()->left = new tree::Node<int>(2);
+  t1.GetRoot()->left->right = new tree::Node<int>(3);
+
+  tree::Tree<int> t2(1);
+  t2.GetRoot()->left = new tree::Node<int>(99);
+  t2.GetRoot()->left->right = new tree::Node<int>(3);
+
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, StringTreesIdentical) {
+  std::array<std::string, 7> arr = {"m", "a", "b", "c", "d", "e", "f"};
+  tree::Tree<std::string> t1 = tree::CreateTree(arr);
+  tree::Tree<std::string> t2 = tree::CreateTree(arr);
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, StringTreesNotIdentical) {
+  tree::Tree<std::string> t1 = tree::CreateTree(
+      std::array<std::string, 3>{"m", "a", "b"});
+  tree::Tree<std::string> t2 = tree::CreateTree(
+      std::array<std::string, 3>{"m", "a", "x"});
+  EXPECT_FALSE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, DoubleTreesIdenticalExact) {
+  tree::Tree<double> t1 = tree::CreateTree(std::array{1.5, 0.25, 2.75});
+  tree::Tree<double> t2 = tree::CreateTree(std::array{1.5, 0.25, 2.75});
+  EXPECT_TRUE(IsIdentical(t1, t2));
+}
+
+TEST(CompareTrees, ConsistentWithSymmetryOnMirroredTrees) {
+  // зеркальные деревья НЕ идентичны (но симметричны) — разные понятия
+  tree::Tree<int> t1 = tree::CreateTree(std::array{1, 2, 2, 3, 4, 4, 3});
+  tree::Tree<int> t2 = tree::CreateTree(std::array{1, 2, 2, 4, 3, 3, 4});
+  EXPECT_FALSE(IsIdentical(t1, t2));
+  EXPECT_TRUE(IsSymmetrical(t1));
+  EXPECT_TRUE(IsSymmetrical(t2));
+}
+

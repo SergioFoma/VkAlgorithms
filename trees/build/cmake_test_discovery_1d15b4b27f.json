@@ -1,0 +1,147 @@
+{
+  "tests": 27,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "FindExtrems",
+      "tests": 27,
+      "testsuite": [
+        {
+          "name": "EmptyTreeIsEmpty",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 26
+        },
+        {
+          "name": "MinOnEmptyThrows",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 34
+        },
+        {
+          "name": "MaxOnEmptyThrows",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 39
+        },
+        {
+          "name": "ProductOnEmptyThrows",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 44
+        },
+        {
+          "name": "SingleElement",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 49
+        },
+        {
+          "name": "MinIsLeftmostNode",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 63
+        },
+        {
+          "name": "MaxIsRightmostNode",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 68
+        },
+        {
+          "name": "ProductOfClassicBst",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 73
+        },
+        {
+          "name": "MinIsRootWhenNoLeftSubtree",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 77
+        },
+        {
+          "name": "MaxIsRootWhenNoRightSubtree",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 89
+        },
+        {
+          "name": "InsertionOrderDoesNotChangeExtremes",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 101
+        },
+        {
+          "name": "LevelOrderArrayRestoresSameShape",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 130
+        },
+        {
+          "name": "RestoresFromLevelOrderOfDeeperTree",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 138
+        },
+        {
+          "name": "SortedAscendingInputBecomesRightChain",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 156
+        },
+        {
+          "name": "SortedDescendingInputBecomesLeftChain",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 166
+        },
+        {
+          "name": "NegativeValues",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 180
+        },
+        {
+          "name": "MixedSignValues",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 186
+        },
+        {
+          "name": "ZeroIsMinimum",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 192
+        },
+        {
+          "name": "ZeroIsMaximum",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 197
+        },
+        {
+          "name": "DuplicatesDoNotBreakExtremes",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 202
+        },
+        {
+          "name": "AllSameValues",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 211
+        },
+        {
+          "name": "TwoElements",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 216
+        },
+        {
+          "name": "NoInt32OverflowWithInt64Type",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 228
+        },
+        {
+          "name": "LargeExtremesWithBigHeight",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 234
+        },
+        {
+          "name": "DoubleValues",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 243
+        },
+        {
+          "name": "StringMinAndMaxLexicographic",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 248
+        },
+        {
+          "name": "BstHoldsRootInvariant",
+          "file": "\/Users\/foma\/Documents\/VkAlgorithms\/trees\/find_extrems_tests.cpp",
+          "line": 260
+        }
+      ]
+    }
+  ]
+}

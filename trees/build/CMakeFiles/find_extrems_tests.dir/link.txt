@@ -1,0 +1,1 @@
+/usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/find_extrems_tests.dir/find_extrems_tests.cpp.o -o find_extrems_tests  lib/libgtest_main.a lib/libgtest.a
